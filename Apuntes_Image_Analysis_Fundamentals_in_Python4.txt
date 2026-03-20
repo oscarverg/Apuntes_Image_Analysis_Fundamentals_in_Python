@@ -1,0 +1,88 @@
+#----------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------
+
+4. Librerías de Análisis de imágen usadas
+
+#------------------------------------------------------------------------------
+
+
+Entre las librerías de mejor calidad, eficiencia, y comprensión se encuentran:
+
+scikit-image, scipy.ndimage,OpenCV, SimpleITK, Mahotas, y Pillow
+
+	Cada una puede cumplir las funciones de las otras, pero se diferencian en que pueden poseer una
+	mejor performance, o poseer mejores algoritmos que las otras, para determinadas acciones/tareas
+
+	#En el curso usaremos predominantemente scikit-image como herramienta de aprendizaje, ya que
+	#posee buena documentación, e implementa casi todos los algoritmos para cumplir tareas
+
+
+#------------------------------------------------------------------------------
+
+scikit-image
+
+es una colección de algoritmos para procesamiento de imagenes
+
+#¿Cómo instalar esta librería?
+
+Usando conda:
+
+$conda install scikit-image
+
+Usando pip:
+
+$pip install scikit-image
+
+#---------------------------
+
+#¿Dónde encontrar documentación?
+
+Website: https://scikit-image.org/
+
+Current documentation: https://scikit-image.org/docs/0.21.x/
+
+Referencias: https://dx.doi.org/10.7717/peerj.453
+
+#----------------------------
+
+scipy.ndimage
+
+Paquete de la librería SciPy que se enfoca en el procesamiento de imágenes multi-dimensional
+
+	#Muchas funciones de scikit-image se acoplan bien a los algoritmos de scipy.ndimage
+
+#¿Cómo instalar esta librería?
+
+Usando conda:
+
+$conda install scipy
+
+Usando pip:
+
+$pip install scipy
+
+#---------------------------
+
+#¿Dónde encontrar documentación?
+
+Website: https://scipy.org/
+
+Current documentation: https://docs.scipy.org/doc/scipy/index.html
+
+
+#--------------------------
+
+iaf
+
+librería pequeña de ayuda que simplifica algunas operaciones que serían (de otra forma) complejas en
+scikit-imgae, matplotlib, y otras librerías
+
+#Código y Documentación:
+
+Code: https://git.bsse.ethz.ch/pontia/iaf
+
+Current documentation: https://ia-res.ethz.ch/docs/iaf/index.html
+
+
+#--------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------

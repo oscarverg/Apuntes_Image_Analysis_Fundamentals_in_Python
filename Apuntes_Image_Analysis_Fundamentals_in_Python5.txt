@@ -1,0 +1,362 @@
+#----------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------
+
+5. Conceptos básicos de análisis de imágenes
+
+#-------------------------------------------------------------------------------------------------
+
+Tipos de Datos
+
+#-----------------------------
+
+Las imágenes son guardadas como matrices 2D (o 3D) de intensidad de pixeles
+
+        #La tercera dimensión puede tener distintas interpretaciones según el contexto (Ej:
+        #Intensidad de emisión de fluoróforos, planos de una adquisición 3D, o series de una serie
+        #de tiempo
+
+
+scikit-image usa matrices de alta eficacia de Numpy para guardar y procesar imágenes
+
+        Dado que la intensidad de imágenes es una versión "quantizada" de la señal análoga original
+        el tipo de dato de la "Numpy Array" es elegido para acomodar el numero de "gray values"
+        usados para representar el rango dinámico de la señal discretizada
+
+        #No entiendo mucho este párrafo
+
+
+Se requieren valores "floating point" para realizar la cuantificación. Numpy ofrece los tipos
+"numpy.float32" y "numpy.float.64" (correspondiente al tipo de float nativo de Python)
+
+        Dado que los números reales solo pueden ser aproximados por un número finito de bits, el
+        rango posible y precisión de los tipos de datos "floating point" difieren
+
+        #Aunque, en ambos casos númmeros pequeños pueden ser aproximados más precisamente que
+        #números largos
+
+
+La precisión muestra la distancia mínima entre dos números reales que resultara en diferentes
+representaciones binarias
+
+        Diferencias más pequeñas serán interpretadas como la misma secuencia de bit
+
+        #En otras palabras, y según lo que entiendo, usar un tipo de floating point determinará
+        #sensibilidad a diferencias de intensidad
+
+
+#-------------------------------------------------
+
+#Ejemplo:
+
+a= np.float32(1000)
+
+b= a+ np.float32(1e-4) #1e-4 es mas grande que la precisión
+
+b==a
+
+#False
+
+c= a+ np.float32(1e-5) #1e-5 es mmás pequeño que la precisión
+
+c==a
+
+#True
+
+#---------------------------------------------------------------------------------------------
+
+Limitación de la representación de bits
+
+#--------------------------------------
+
+Las operaciones en los tipos de datos que causan que los valores superen los límites del tipo de
+dato que los retiene pueden ser bastante disruptivas
+
+
+a= np.uint8(10)
+
+b= np.uint8(20)
+
+a + b
+
+>>30  #Bieeeeen
+
+a - b
+
+>>246 #Ops!
+
+#¿Porqué ocurre esto?
+
+	El valor de -10 no puede ser guardad en un dato de tipo numpy.uint8. El valor negativo
+	se "wrap around" el rango dinámico para dar un valor de 246
+
+	#No entiendo esto del todo, porque 246 y no otro número?
+
+Versiones modernas de Python nos advertiran de esto con "overflow encountered ...", pero esto
+puede pasarse en alto en un entorno de producción
+
+
+#¿Qué se puede hacer para evitar esto?
+
+Una buena estrategia es, siempre que se aplique operaciones en valores de integrales, pasar el dato
+a "floating point"
+
+
+c= np.float32(a) - b
+	#Pasar un solo dato es suficiente
+
+
+Cuando aplicamos operaciones a imágenes queremos frecuentemente guardar los valores que caen fuera 
+de los rangos dinámicos
+
+
+e= np.uint8([10,20,30])
+
+f= np.uint8([20, 10, 15])
+
+g= e.astype(np.float32) - f
+
+g
+
+>> array ([-10., 10., 15.], dtype=float32)
+	#Un valor negativo!
+
+
+g[g<0] = 0
+	#Esto setea los valores negativos en 0 !
+
+g= g.astype(np.uint8)
+	#Castea de vuelta
+
+array([0, 10,15], dtype= uint8)
+
+#----------------------------------------------------------------------------------------------------
+
+Lectura de imagen y escritura
+
+#-------------------------
+
+Para imágenes de formato estándar (.tif, y .jpg) podemos usar la función imread() de "scikit-image"
+
+#Ejemplo:
+
+from skimage.io import imread
+
+img= imread("image.tif")
+print(img.shape, img.dtype)
+
+>> (1068, 1212) uint16
+
+
+Para escribir una imagen devuelta al disco podemos usar:
+
+from skimage.io import imsave
+
+imsave ("out_image.tif", img)
+
+
+#-----------------------
+
+Para formato de archivos propietarios, como Nikon (.nd2) hay pocas librerías que se pueden usar.
+Aquí usaremos iaf
+
+#Ejemplo:
+
+from iaf.io.readers import NikonND2Reader
+
+reader= NikonND2Reader("file.nd2")
+reader
+
+>>NikonND2Reader("file.nd2")
+
+	-Dimensions: (v=7, t=1, c=2, z=6, y=1024, x=1024)
+	-Voxel size: (x=0, 519600, y=0.519600, z=4.955000)
+	-Series geometry: "czyx"
+
+
+#Este archivo ND2 contiene v=7 series (ej: stage positions)
+
+Podemos cargar las primeras series con:
+
+
+stack= reader[0]
+
+stack.shape
+
+(2, 6, 1024, 1024) #c,z, y, x
+
+
+
+Para iterar sobre todas las series en el archivo podemos usar:
+
+
+for img in reader:
+
+	print (img.shape, img.mean())
+
+>>(2, 6, 1024, 1024) 82.529...
+>>(2, 6, 1024, 1024) 112.752...
+>>...
+
+#---------------------------------------------------------------------------------------------------
+
+Colores
+
+#----------------------------
+
+En este curso nos concentraremos en imagenes de valores grises, que representan la intensidad de alguna
+señal
+
+	La única info guardada en una imagen será la intensidad de la señal original en la posición de
+	cada pixel.
+
+	#Por default, la intensidad de imagenes se muestra como pixeles negros para intensidad 0, y
+	#pixeles blancos para intensidad 255 (for 8-bit images) o 65535 (for 16-bit images)
+
+incluso con imagenes de valores "grises", podemos asignar color para especificar un significado concreto
+a los pixeles (o enfatizar relaciones espaciales entre distintas imagenes) 
+
+	Ejemplo: Imagenes de Fluorescencia, y Contraste de interferencia diferencial (todas para
+		la misma muestra)
+
+
+Podemos incrementar el contenido de información de una imagen asignando distintos colores y combinandolos
+en una imagen compuesta que ayuda a visualizar la relación espacial de los tres canales (2 imágenes de
+fluorescencia y una de contraste)
+
+
+
+La librería iaf otorga la función: iaf.color.to_composite()  , que facilmente compone imágenes
+
+#Ejemplo:
+
+#si mcherry, gfp, y dic son tres "Numpys arrays" que contienen los correspondientes valores grises,
+#podemos crear una imagen compuesta de la siguiente forma:
+
+
+from iaf.color import to_composite
+
+cmp= to_composite(
+
+	images=(mcherry, gfp, dic),
+	colors=(Color.Red, Color.Green, Color.Gray)
+
+	)
+
+
+
+#-----------------------------------------------------------------------------------------------
+
+Histogramas y operaciones de histogramas
+
+#--------------------------------------------
+
+
+Son usados para entender como están distribuidos los valores de intensidad de una imagen
+
+Podemos calcular los histogramas de una imagen en scikit-image usando la función: histogram()
+de sckimage.exposure
+
+
+#Ejemplo:
+
+fromm skimage.exposure import histogram
+
+#calcula el histograma sobre el rango del tipo de dato
+
+n, b= histogram(img, source_range= "dtype")
+
+#calcula el logaritmo de los conteos
+
+norm_log_n= np.log(1.0 + n)
+
+
+
+
+Pueden haber casos de saturación de señal en la imagen (observable a través de el decaimiento de la
+señal convertida a logaritmo) 
+	#En el documento debería verse como el plot
+
+
+En función de esto, es común aplicar un ajuste lineal a las intensidades de la imagen, para incrementar
+el contraste en la imagen
+
+
+El ajuste lineal más simple cambia la imagen hacia el cero sustrayendo el valor mínimo, y estirando el
+histograma para que cubra la extensión total del rango dinámico de la imagen
+
+Esta operación puede realizarse sin pérdida de información si el rango usado para la nueva escala
+contiene todas las intensidades de la imagen inicial
+
+En scikit-image esto puede realizarse de la siguiente forma:
+
+
+#Ejemplo:
+
+from skimage.exposure import rescale_intensity
+
+img_a= rescale_intensity (img)
+
+	#podemos pasar un argumento adicional para explicitar el límite inferior y superior de la
+	#normalización
+
+
+	#Ejemplo:
+
+	vmin, vmax= np.percentile(img, (5,95))
+
+	img_a= rescale_intensity(img, (vmin, vmax))
+
+
+#¿Existe otra alternativa?
+
+La función imshow() de "iaf.plot" muestra imágenes con control en el ajuste de intensidad mediante sus
+argumentos "auto_stretch, y clip_percentile (sin modificar la imagen original):
+
+#Ejemplo:
+
+imshow(img, auto_stretch= True, clip_percentile= 5.0)
+
+
+#----------------------
+
+El contraste de la imagen aumento, no obstante, si ploteamos el histograma y su log podemos observar que
+tanto la intensidad baja como la alta están altamente saturadas
+
+Una herramienta util para visualizar los pixeles saturados en la imagen es la tabla Hi-Lo
+
+
+#¿Y cómo hacemos eso?:
+
+from iaf.color import get_hilo_cmap
+
+imshow(img_s, cmap= get_hilo_cmap(65535)
+
+
+
+#Mucho cuidado de usar imágenes saturadas para análisis cuantitativos
+
+
+#---------------------------------------------------------------------------------------------
+
+Filtros
+
+#---------------------------------------------------------
+
+Las imágenes son filtradas en el dominio espacial mediante la operación de convolución
+
+	#convolución: operatoria matemática que combina dos funciones para crear una tercera, que
+	#representa como se superponen las dos originales
+
+		Esta operación es fundamental en procesamiento de señales, ya que se usa para
+		describir como una señal de entrada se transforma al pasar por un sistema
+
+
+En esta sección veremos algunos ejemplos:
+
+#--------------------------------------
+
+Filtro "común"
+
+Correremos un filtro común en la imagen "actin.tif" definiendo nuestro propio kernel 5x5
+	
+	Necesitamos un filtro con esos homogéneos que sumen hasta 1.0
