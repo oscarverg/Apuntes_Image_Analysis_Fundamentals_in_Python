@@ -153,6 +153,10 @@ from skimage.io import imsave
 
 imsave ("out_image.tif", img)
 
+#Descubrí que es importante a la hora de exportar las imágenes tif desactivar la opción de comprimir,
+#ya que con ello no se puede leer el archivo con la función (y habría que realizar un paso extra para
+#hacerlo)
+
 
 #-----------------------
 
@@ -360,3 +364,139 @@ Filtro "común"
 Correremos un filtro común en la imagen "actin.tif" definiendo nuestro propio kernel 5x5
 	
 	Necesitamos un filtro con esos homogéneos que sumen hasta 1.0
+
+
+	En python podemos definir el kernel de la siguiente forma:
+
+k_5x5 = 1/25 *np*array([
+	[1.0, 1.0, 1.0, 1.0, 1.0],
+	[1.0, 1.0, 1.0, 1.0, 1.0],
+	[1.0, 1.0, 1.0, 1.0, 1.0],
+	[1.0, 1.0, 1.0, 1.0, 1.0],
+	[1.0, 1.0, 1.0, 1.0, 1.0]
+
+], dtype= np.float32)
+
+#o de forma más concisa:
+
+k_9x9= 1/81 * np.ones((9, 9), dtype= np.float32)
+
+
+	#¿Qué es un kernel?
+
+		Un kernel es una pequeña matriz de números que se usa para modificar una imagen,
+		mediante la aplicación de una operación local sobre cada pixel
+
+
+#Podemos aplicar el filtro por defecto en la imagen usando "convolve()" de "scipy.ndimage."
+
+#Ejemplo:
+
+from scipy.ndimage import convolve
+
+img_f_5x5= convolve(img, k_5x5)
+
+img_f_9x9= convolve(img, k_9x9)
+
+
+
+#---------------------------------------
+
+Filtro Gaussiano
+
+El filtro Gaussiano es mejor preservando características de un tamaño o escala determinado (en
+comparación a los filtros comúnes
+
+	El soporte del kernel Gaussiano cae suavemente a medida que aumenta la distancia desde el
+	pixel central en la imagen
+
+#En otras palabras, mayores valores de sigma resultan en imagenes con un mayor suavizado, y con una mayor
+#supresión de elementos considerados ruido en la imagen
+
+
+#¿Cómo llamarlo?
+
+
+	from skimage.filters import gaussian
+
+	img_f_gs1= gaussian(img,sigma=1.0)
+
+	img_f_gs3= gaussian(img, sigma=3.0)
+
+
+
+#---------------------------------------------------------
+
+Usar Derivadas de la Imagen como filtros
+
+Las derivadas pueden aproximarse de varias formas, aquí calculamos la derivada horizontal y vertical
+mediante convolving de los kernel sx y sy definidos abajo
+
+
+k_sx= np.array([
+	[1, 0, -1],
+	[1, 0, -1],
+	[1, 0, -1]
+], dtype=np.float32)
+
+
+#aaaand..
+
+
+k_sy= k_sx.T
+
+
+img_f_sx= convolve(img_gray.astype(np.float32), k_sx)
+
+img_f_sy= convolve(img_gray.astype(np.float32), k_sy)
+
+
+#------------------------------------------------------------
+
+Filtros lineales y no-lineales
+
+Todos los filtros que vimos anteriormente pueden ser aplicados mediante convolución ("convolve"), no
+obstante, también existen filtros no lineales
+
+Como su nombre lo implica, los filtros no lineales no realizan ninguna operación lineal en los pixeles
+
+	#A pesar de esto, en aplicaciones específicas pueden ser más eficientes que los lineales
+
+
+
+
+#---------------------------------------------------------------------------------------------
+
+Segmentación
+
+#---------------------------------------------------------------------------------------------
+
+Cuando se realiza análisis cuantitativo de imágenes queremos extraer objetos para medir varias
+características que luego se usaran para probar hipótesis
+
+	#Es esencial para esto el preservar las formas de los objetos lo máximo posible
+
+	Para una buena (robusta) segmentación los objetos de interés deben idealmente poseer una
+	intensidad significativamente grande respecto al fondo de la imagen
+
+
+Diferentes algoritmos pueden dar diferentes segmentaciones de la misma señal (imagen)
+
+	Los algoritmos están implementados en el paquete: "skimage.filters", y pueden ser usados
+	de la siguiente forma:
+
+		from skimage.filters import threshold_otsu, threshold_li, threshold_triangle
+
+
+		th_ot= threshold_otsu(img)
+
+		th_li= threshold_li(img)
+
+		th_tr= threshold_triangle(img)
+
+#No entendí bien como hacer histogramas con los Threshold..
+
+
+#-------------------------------------------------
+
+
