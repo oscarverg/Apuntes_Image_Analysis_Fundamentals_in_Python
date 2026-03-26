@@ -21,7 +21,9 @@ from skimage.filters import gaussian #usar filtros gaussianos
 
 from scipy.ndimage import gaussian_laplace #para usar filtro laplaciano-gaussiano
 
-from skimage.filters import threshold_otsu, threshold_li, threshold_triangle
+from skimage.filters import threshold_otsu, threshold_li, threshold_triangle #máscaras binarias segm
+
+from iaf.process import subtract_background #para sustracción de fondo (prev. segmentación)
 
 #-------------------------------------------------------------------------------
 
@@ -235,6 +237,29 @@ def mascara_binaria(imagen):
 	bw_li= imagen> th_li
 	bw_tr= imagen> th_tr
 	return bw_ot, bw_li, bw_tr
+
+#-----------------------------------------------------------------------------------
+
+#9. Substracción de fondo de la imagen
+
+def sustraccion_fondo(imagen):
+
+	"""
+	Sustrae el fondo de una imagen antes de ser segmentada
+
+	Parámetros:
+		Imagen(numpy.ndarray): Imagen a la que se desea hacer substracción de fondo
+
+	Retorna:
+		Imagen(numpy.ndarray): Imagen corregida
+	"""
+
+	img_corr, bkg= subtract_background(
+	imagen, algorithm="morphological_opening",
+	radius=25, return_background=True)
+
+	return img_corr
+
 #-----------------------------------------------------------------------------------
 
 #Testing
@@ -284,7 +309,18 @@ if __name__ == "__main__":
 	visualizador_imagen(bw_tr, "Máscara binaria algoritmo Triangle")
 
 
+	#Sustracción de fondo
 
+	img_corr= sustraccion_fondo(img_gray)
+
+	visualizador_imagen(img_gray, "Conversión a Escala de grises")
+	visualizador_imagen(img_corr, "Imagen con Corrección de fondo")
+
+	bw_ot, bw_li, bw_tr= mascara_binaria(img_corr)
+
+	visualizador_imagen(bw_ot, "Máscara binaria Otsu con Correción de fondo")
+	visualizador_imagen(bw_li, "Máscara binaria Li con Corrección de fondo")
+	visualizador_imagen(bw_tr, "Máscara binaria Triangle con Corrección de fondo")
 
 
 

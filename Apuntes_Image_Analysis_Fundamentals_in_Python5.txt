@@ -496,7 +496,74 @@ Diferentes algoritmos pueden dar diferentes segmentaciones de la misma señal (i
 
 #No entendí bien como hacer histogramas con los Threshold..
 
+#A pesar de esto, el archivo de pruebas logro una segmentación satisfactoria con los algoritmos
 
-#-------------------------------------------------
+#---------------------------------------------------------------------------------------------
+
+Sustracción de Fondo
+
+#---------------------------------------------------------------------------------------------
+
+Muchas veces lasegmentación basada solamente en thresholding falla
+
+	#¿Porqué ocurre esto?
+
+	Esto ocurre debido a que los valores de tresholding no son óptimos a lo largo de la imagen,
+	debido a un efecto de sombreado producido por una mayor media de intensidad al medio de la
+	imagen
+
+		Es decir, por diferencias en la iluminación en distintas regiones de la imagen
+		(Ej: Las cámaras que cubren largos campos en microscopio
+
+Esto puede reducirse/corregirse de varias formas, siendo el mejor mmétodo adquerir una segunda imagen
+del fondo del microscopio conteniendo solo la intensidad de los pixeles del fondo (removiendo la
+muestra) y sustrayendo esta imagen oscura de la imagen original para corregirla
+
+	Si no se dispone de esta immagen se puede estimar una aproximación del fondo
+
+		#No obstante, para que esto funcione de forma confiable la señal debe estár concentrada
+		#en pequeñas manchas rodeadas de grandes áreas de fondo
+
+#-----------------------
+
+Existen muchos algoritmos que permiten estimar el fondo de una imagen:
+
+	La librería iaf implementa 3 distintos algoritmos en la función:
+	iaf.process.substract_background():
+
+		"rolling ball", "morphological_opening", "gaussian"
+
+			morphological: la más precisa, pero la más cara en recursos
+			rolling ball: la por defecto
+
+
+
+		#Para acelerar la computación, a costa de reducción en la precisión, la función
+		#substract_background() provee un parámetro adicional que reduce el tamaño de la
+		#imagen para su procesamiento
+
+
+#----------------------
+
+#¿Cómo correr la sustracción de fondo?
+
+De la siguiente forma:
+
+img_corr, bkg= subtract_background(
+	img, algorithm="morphological_opening",
+	radius=25, return_background=True)
+
+	#El parámetro "radius" debería ser mayor al tamaño de los objetos, con tal de que la mayoría de
+	#los pixeles sampleados pertenezcan al fondo. 
+	#Tampoco debería ser muy grande, pues fallara en estimar el fondo local
+
+
+Podemos usar la función iaf.plot.validation.plot_background_subtraction_control() , para checar el
+resultado de nuestra substracción
+
+	#De la siguiente forma:
+
+	plot_background_subtraction(img,bkg)
+
 
 
