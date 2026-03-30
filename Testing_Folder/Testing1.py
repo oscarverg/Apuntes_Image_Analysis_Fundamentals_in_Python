@@ -27,7 +27,12 @@ from iaf.process import subtract_background #para sustracción de fondo (prev. s
 
 from skimage.measure import label #para análisis de connected components
 
-from iaf.plot import show_labels
+from iaf.plot import show_labels #para mostrar los labels (antecede a "plt.show()" )
+
+from iaf.morph.watershed import separate_neighboring_objects #separa objetos demasiado cercanos
+
+from iaf.morph.watershed import estimate_object_sizes #define argumentos de la función anterior
+# "(separate_neighboring_objects()" )
 
 #-------------------------------------------------------------------------------
 
@@ -278,13 +283,31 @@ def connected_components_analysis(binary_mask):
 		binary_mask(numpy.ndarray): Máscara binaria
 
 	Retorna:
-		None
+		labels(numpy.ndarray): Máscara con analisis de componentes
+		num: número de componentes en la imagen
 
 	"""
 
 	labels, num= label(binary_mask, background= 0, return_num= True, connectivity= 1)
 
 	return labels, num
+
+
+#-----------------------------------------------------------------------------------
+
+#11. Watershed segmentation
+
+def watershed(binary_mask):
+
+	labels, num= connected_components_analysis(binary_mask)
+
+	area, min_axis, max_axis, equiv_diam = estimate_object_sizes(labels)
+
+	labels_sep, num_sep, _ = separate_neighboring_objects(binary_mask, labels, min_size= min_axis)
+
+	print (f"Found {num_sep} objects")
+
+	return(labels_sep)
 
 #-----------------------------------------------------------------------------------
 
@@ -342,11 +365,11 @@ if __name__ == "__main__":
 	visualizador_imagen(img_gray, "Conversión a Escala de grises")
 	visualizador_imagen(img_corr, "Imagen con Corrección de fondo")
 
-	bw_ot, bw_li, bw_tr= mascara_binaria(img_corr)
+	bw_ot_corr, bw_li_corr, bw_tr_corr= mascara_binaria(img_corr)
 
-	visualizador_imagen(bw_ot, "Máscara binaria Otsu con Correción de fondo")
-	visualizador_imagen(bw_li, "Máscara binaria Li con Corrección de fondo")
-	visualizador_imagen(bw_tr, "Máscara binaria Triangle con Corrección de fondo")
+	visualizador_imagen(bw_ot_corr, "Máscara binaria Otsu con Correción de fondo")
+	visualizador_imagen(bw_li_corr, "Máscara binaria Li con Corrección de fondo")
+	visualizador_imagen(bw_tr_corr, "Máscara binaria Triangle con Corrección de fondo")
 
 
 	#Connected Components
@@ -364,3 +387,8 @@ if __name__ == "__main__":
 
 
 
+	#Watershed segmentation
+
+	labels_watershed= watershed(bw_ot)
+	show_labels(labels_watershed, plot_labels= True, title= "Watershed bw_ot")
+	plt.show()

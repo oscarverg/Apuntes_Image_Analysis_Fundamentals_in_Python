@@ -608,3 +608,25 @@ sí, de los que se pueden extraer características para un análisis
 Podemos usar la función skimage.measure.label() para hacer un análisis de los componentes conectados
 
 
+#-------------------------------------------------------------------------------------------------
+
+Watershed segmentation (segmentación "divisoria"?)
+
+#-------------------------------------------------------------------------------------------------
+
+Incluso si lasegmentación funciona, aún se pueden ver algunos objetos fusionados
+
+Es decir, en un resultado de analisis de componentes conectados podemos ver que algunos objetos
+comparten label (y color), y centro de masa (entre los dos componentes)
+
+#¿Cómo solucionamos esto?
+
+La transformación de "watershed" puede ayudarnos a separar objetos fusionados
+
+Mediante la función: iaf.morph.watershed.separate_neighboring_objects() , podemos separarlos
+
+Mediante la función iaf.morph.watershed.estimate_object_sizes() , podemos definir argumentos
+por los que se considerará separar o no
+
+
+
