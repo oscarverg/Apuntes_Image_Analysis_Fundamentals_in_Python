@@ -504,7 +504,7 @@ Sustracción de Fondo
 
 #---------------------------------------------------------------------------------------------
 
-Muchas veces lasegmentación basada solamente en thresholding falla
+Muchas veces la segmentación basada solamente en thresholding falla
 
 	#¿Porqué ocurre esto?
 
@@ -515,11 +515,11 @@ Muchas veces lasegmentación basada solamente en thresholding falla
 		Es decir, por diferencias en la iluminación en distintas regiones de la imagen
 		(Ej: Las cámaras que cubren largos campos en microscopio
 
-Esto puede reducirse/corregirse de varias formas, siendo el mejor mmétodo adquerir una segunda imagen
+Esto puede reducirse/corregirse de varias formas, siendo el mejor método adquerir una segunda imagen
 del fondo del microscopio conteniendo solo la intensidad de los pixeles del fondo (removiendo la
 muestra) y sustrayendo esta imagen oscura de la imagen original para corregirla
 
-	Si no se dispone de esta immagen se puede estimar una aproximación del fondo
+	Si no se dispone de esta imagen se puede estimar una aproximación del fondo
 
 		#No obstante, para que esto funcione de forma confiable la señal debe estár concentrada
 		#en pequeñas manchas rodeadas de grandes áreas de fondo
@@ -565,5 +565,46 @@ resultado de nuestra substracción
 
 	plot_background_subtraction(img,bkg)
 
+
+#-----------------------------------------------------------------------------------------------
+
+Componentes conectados
+
+#-----------------------------------------------------------------------------------------------
+
+El resultado de la segmentación usualmente es una imagen binaria con pixeles que pertenecen, o bien
+al fondo, con un valor de 0, o bien al primer plano, teniendo un valor de 1.
+
+	A partir de esto, un ser humano es capaz facilmente de distinguir elementos dentro de la
+	imagen, por vecindad de pixeles, formas, entre otras cosas. Sin embargo, un computador
+	no interpreta nada, y sólo visualiza una matriz gigante de 0s y 1s.
+
+#¿Qué hacemos entonces?
+
+Para que la computadora pueda interpretar necesitamos transformar la mascara binaria en distintos sets
+de pixeles vecinos, a los que asignamos "labels" (marcadores) individuales
+
+	#Estos labels son ennteros que empiezan desde el 1 (siendo por convención, los pixeles del
+	# "fondo" asignados con 0
+
+
+#¿Cómo lo hacemos?
+
+
+El algoritmo que implementa esta operación es el "connected component analysis"
+
+	El algoritmo escanea la mascara binaria, agrupa todos los pixeles de primer plano conectados
+	físicamente, y los asigna al mismo componente conectado
+
+	Cada componente está separado de otros mediante la intervención de los pixeles del fondo
+	(segundo plano)
+
+#¿Cuál es el resultado de esto?
+
+Ahora, los componentes conectados corresponden a objetos individuales, separados espacialmente entre
+sí, de los que se pueden extraer características para un análisis
+
+
+Podemos usar la función skimage.measure.label() para hacer un análisis de los componentes conectados
 
 

@@ -25,6 +25,10 @@ from skimage.filters import threshold_otsu, threshold_li, threshold_triangle #m�
 
 from iaf.process import subtract_background #para sustracción de fondo (prev. segmentación)
 
+from skimage.measure import label #para análisis de connected components
+
+from iaf.plot import show_labels
+
 #-------------------------------------------------------------------------------
 
 #1. Lectura del archivo:
@@ -262,6 +266,28 @@ def sustraccion_fondo(imagen):
 
 #-----------------------------------------------------------------------------------
 
+#10. Labeling de Connected Components
+
+def connected_components_analysis(binary_mask):
+
+	"""
+
+	Aplica el label sobre la máscara binaria, y después plotea los connected components
+
+	Parámetros:
+		binary_mask(numpy.ndarray): Máscara binaria
+
+	Retorna:
+		None
+
+	"""
+
+	labels, num= label(binary_mask, background= 0, return_num= True, connectivity= 1)
+
+	return labels, num
+
+#-----------------------------------------------------------------------------------
+
 #Testing
 
 #-----------------------------------------------------------------------------------
@@ -321,6 +347,20 @@ if __name__ == "__main__":
 	visualizador_imagen(bw_ot, "Máscara binaria Otsu con Correción de fondo")
 	visualizador_imagen(bw_li, "Máscara binaria Li con Corrección de fondo")
 	visualizador_imagen(bw_tr, "Máscara binaria Triangle con Corrección de fondo")
+
+
+	#Connected Components
+
+	labels_ot, num_ot= connected_components_analysis(bw_ot)
+	show_labels(labels_ot, plot_labels= True, title= "Connected components bw_ot")
+
+	labels_li, num_li= connected_components_analysis(bw_li)
+	show_labels(labels_li, plot_labels= True, title= "Connected componens bw_li")
+
+	labels_tr, num_tr= connected_components_analysis(bw_tr)
+	show_labels(labels_tr, plot_labels= True, title= "Connected components bw_tr")
+
+	plt.show()
 
 
 
