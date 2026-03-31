@@ -614,7 +614,7 @@ Watershed segmentation (segmentación "divisoria"?)
 
 #-------------------------------------------------------------------------------------------------
 
-Incluso si lasegmentación funciona, aún se pueden ver algunos objetos fusionados
+Incluso si la segmentación funciona, aún se pueden ver algunos objetos fusionados
 
 Es decir, en un resultado de analisis de componentes conectados podemos ver que algunos objetos
 comparten label (y color), y centro de masa (entre los dos componentes)
@@ -628,5 +628,52 @@ Mediante la función: iaf.morph.watershed.separate_neighboring_objects() , podem
 Mediante la función iaf.morph.watershed.estimate_object_sizes() , podemos definir argumentos
 por los que se considerará separar o no
 
+#-------------------------------------------------------------------------------------------------
 
+Operaciones Morfológicas
+
+#------------------------------------------------------------------------------------------------
+
+Otro problema en la segmentación es la fragmentación de objetos en componentes más pequeños
+
+#Muy parecido a lo que me da al  segmentar de forma normal la imagen (con algoritmo Otsu y mayor en
+#los otros)
+
+
+#-------------------------
+
+#¿Qué hacemos?
+
+Las operaciones morfológicas pueden ayudar a corregir esto
+
+Podemos incrementar el tamaño de los fragmentos pequeños mediante la función
+"skimage.morphology.dilation". Esto provocará que su tamaño sea suficiente para que se fusionen con los
+fragmentos vecinos
+
+	#¿Cómo lo hacemos?
+
+	from skimage.morphology import dilation, disk
+
+	dilated= dilation(bw, disk(1))
+
+		#Siempre tener en cuenta en no caer en el anterior problema,en donde distintos objetos
+		#se fusionan y consideran como solo 1
+
+
+Después podemos usar la función "scipy.ndimage.binary_fill_holes()" para convertir los pixeles
+del fondo, rodeados por pixeles de primer plano, en primer plano (rellenar figuras)
+
+	#¿Cómo?
+
+	from scipy.ndimage import binary_fill_holes
+
+	filled= binary_fill_holes(dilated)
+
+
+Finalmente, podemos revertir el efecto de engrosamiento de la dilatación original con la función
+"erosion()"
+
+	#¿Cómo?
+
+	eroded= erosion(filled, disk(1))
 

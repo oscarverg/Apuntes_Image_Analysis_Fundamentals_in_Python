@@ -34,6 +34,12 @@ from iaf.morph.watershed import separate_neighboring_objects #separa objetos dem
 from iaf.morph.watershed import estimate_object_sizes #define argumentos de la función anterior
 # "(separate_neighboring_objects()" )
 
+from skimage.morphology import dilation, disk #incrementar tamaño de fragmentos mal segmentados
+
+from scipy.ndimage import binary_fill_holes #convertir pixeles rodeados a primer plano (rellenar figura)
+
+from scipy.ndimage import binary_erosion #reducir engrosamiento provocado por dilation()
+
 #-------------------------------------------------------------------------------
 
 #1. Lectura del archivo:
@@ -295,9 +301,23 @@ def connected_components_analysis(binary_mask):
 
 #-----------------------------------------------------------------------------------
 
-#11. Watershed segmentation
+#11. Watershed segmentation (Separar objetos)
 
 def watershed(binary_mask):
+
+	"""
+
+	Separa los objetos fusionados en el análisis de componentes
+
+	Parámetros:
+		binary_mask(numpy.ndarray): Máscara binaria
+
+	Retorna:
+		labels_sep(numpy.ndarray): Imagen etiquetada donde cada objeto tiene una etiqueta
+		entera única
+
+
+	"""
 
 	labels, num= connected_components_analysis(binary_mask)
 
@@ -311,6 +331,33 @@ def watershed(binary_mask):
 
 #-----------------------------------------------------------------------------------
 
+#12. Operaciones Morfológicas (Unir fragmentos)
+
+def morphological_operation(binary_mask):
+
+	"""
+
+	Une los fragmentos y rellena espacios para considerar varios como una sola imagen
+
+	Parámetros:
+		binary_mask(numpy.ndarray): Máscara binaria
+
+	Retorna:
+		eroded(numpy.ndarray): Máscara binaria con fragmentos fusionados y rellenados
+
+	"""
+
+	dilated= dilation(binary_mask, disk(2))
+
+	filled= binary_fill_holes(dilated)
+
+	eroded= binary_erosion(filled, disk(2))
+
+	return eroded
+
+
+#-----------------------------------------------------------------------------------
+
 #Testing
 
 #-----------------------------------------------------------------------------------
@@ -319,7 +366,7 @@ if __name__ == "__main__":
 
 	#Lectura imagen (y ploteo original)
 
-	img= lector_imagen("Test.tif")
+	img= lector_imagen("Universe.jpg")
 	visualizador_imagen(img, "Imagen original")
 
 	#Conversión y filtros
@@ -386,9 +433,26 @@ if __name__ == "__main__":
 	plt.show()
 
 
-
 	#Watershed segmentation
 
 	labels_watershed= watershed(bw_ot)
 	show_labels(labels_watershed, plot_labels= True, title= "Watershed bw_ot")
+	plt.show()
+
+
+	#Operaciones Morfológicas
+
+	bw_ot_mo= morphological_operation(bw_ot)
+	bw_li_mo= morphological_operation(bw_li)
+	bw_tr_mo= morphological_operation(bw_tr)
+
+	labels_ot_mo, num_ot_mo= connected_components_analysis(bw_ot_mo)
+	show_labels(labels_ot_mo, plot_labels=True, title= "Connected components bw_ot_mo")
+
+	labels_li_mo, num_li_mo= connected_components_analysis(bw_li_mo)
+	show_labels(labels_li_mo, plot_labels=True, title= "Connected components bw_li_mo")
+
+	labels_tr_mo, num_tr_mo= connected_components_analysis(bw_tr_mo)
+	show_labels(labels_tr_mo, plot_labels=True, title= "Connected components bw_tr_mo")
+
 	plt.show()
