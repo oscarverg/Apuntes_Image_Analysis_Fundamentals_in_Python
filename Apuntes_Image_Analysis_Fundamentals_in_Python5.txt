@@ -677,3 +677,31 @@ Finalmente, podemos revertir el efecto de engrosamiento de la dilatación origin
 
 	eroded= erosion(filled, disk(1))
 
+#-----------------------------------------------------------------------------------------------
+
+Medidas
+
+#-----------------------------------------------------------------------------------------------
+
+El último paso en nuestro flujo de trabajo es la extracción de medidas cuantitativas desde los 
+objetos segmentados y procesados
+
+Para esto podemos usar la función skimage.measure.regionprops(). 
+
+	#O su función equivalente: skimage.measure.regionprops_table
+
+	#¿Cómo?
+
+	from skimage.measure import regionprops, regionprops_table
+
+	props= regionprops(labels, intensity_image= img)
+
+El resultado de esto es una gran lista de distintas medidas realizadas sobre cada objeto etiquetado,
+entre ellas área, centroide, excentricidad, perimetro, etc. 
+
+Podemos iterar sobre todas las medidas de la siguiente forma:
+
+	#¿Cómo?
+
+	for prop in props:
+		print  (f"label={prop.label:2}: area={prop.area:3}")

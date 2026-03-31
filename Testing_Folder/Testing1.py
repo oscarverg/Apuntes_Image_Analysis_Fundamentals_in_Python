@@ -40,6 +40,8 @@ from scipy.ndimage import binary_fill_holes #convertir pixeles rodeados a primer
 
 from scipy.ndimage import binary_erosion #reducir engrosamiento provocado por dilation()
 
+from skimage.measure import regionprops, regionprops_table #para sacar medidas de los labels
+
 #-------------------------------------------------------------------------------
 
 #1. Lectura del archivo:
@@ -358,6 +360,28 @@ def morphological_operation(binary_mask):
 
 #-----------------------------------------------------------------------------------
 
+#13. Measurements
+
+def measurements(labels):
+
+	"""
+	Muestra las medidas de cada uno de los objetos etiquetados en el análisis de componentes
+
+	Parámetros:
+		labels(numpy.ndarray): Mascara binaria a la que se le hizo análisis de componentes
+
+	Retorna:
+		None
+
+	"""
+
+	props= regionprops(labels, intensity_image= None)
+
+	for prop in props:
+		print(f"labels={prop.label:2}: area={prop.area:3}")
+
+#-----------------------------------------------------------------------------------
+
 #Testing
 
 #-----------------------------------------------------------------------------------
@@ -366,7 +390,7 @@ if __name__ == "__main__":
 
 	#Lectura imagen (y ploteo original)
 
-	img= lector_imagen("Universe.jpg")
+	img= lector_imagen("Test.tif")
 	visualizador_imagen(img, "Imagen original")
 
 	#Conversión y filtros
@@ -456,3 +480,7 @@ if __name__ == "__main__":
 	show_labels(labels_tr_mo, plot_labels=True, title= "Connected components bw_tr_mo")
 
 	plt.show()
+
+	#Measurements
+
+	labels_ot_mo_measures= measurements(labels_ot_mo)
